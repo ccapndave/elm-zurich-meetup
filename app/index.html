@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Elm</title>
+    <!--
+    Customize this policy to fit your own app's needs. For more guidance, see:
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+    Some notes:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+    -->
+    <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">-->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+
+    <link href="css/bundle.css" rel="stylesheet"/>
+</head>
+<body>
+<!-- The application container -->
+<div id="app"></div>
+
+<!-- Elm -->
+<script src="js/Main.js"></script>
+
+<!-- Javascript -->
+<script>
+  // This loads the main Javascript bundle, and will work nicely in the browser and also in Cordova
+  function loadJS() {
+    var script = document.createElement("script");
+    script.src = "js/bundle.js";
+    document.body.appendChild(script);
+  }
+
+  if (window.cordova) {
+    document.addEventListener("deviceready", loadJS);
+  } else {
+    loadJS();
+  }
+</script>
+
+</body>
+</html>

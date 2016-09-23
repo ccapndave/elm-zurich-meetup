@@ -1,0 +1,75 @@
+@pinSize: 40px;
+@matchSize: 10px;
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.code {
+  .colour {
+    width: @pinSize;
+    height: @pinSize;
+    border-radius: @pinSize / 2;
+    display: inline-block;
+    border: 1px black solid;
+    margin: 0 20px;
+    transition: background-color 0.1s;
+
+    &.colour-0 {
+      background-color: #5f8fb4;
+    }
+
+    &.colour-1 {
+      background-color: #ff5555;
+    }
+
+    &.colour-2 {
+      background-color: #2fbf62;
+    }
+
+    &.colour-3 {
+      background-color: #ffb82a;
+    }
+
+    &.colour-4 {
+      background-color: #7bd2d1;
+    }
+
+    &.colour-5 {
+      background-color: #aa639f;
+    }
+  }
+}
+
+.match {
+    width: @matchSize;
+    height: @matchSize;
+    border-radius: @matchSize / 2;
+    display: inline-block;
+    border: 1px solid black;
+
+    &.black {
+      background-color: black;
+    }
+}
+
+.guess {
+  display: flex;
+}
+
+.guess-list {
+  li {
+    margin-bottom: 10px;
+    pointer-events: none;
+  }
+}
+
+.current-guess {
+  display: flex;
+
+  button {
+    width: 80px;
+  }
+}

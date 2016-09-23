@@ -1,0 +1,7 @@
+build/
+.idea
+*.iml
+.vscode
+npm-debug.log
+elm-stuff
+node_modules
