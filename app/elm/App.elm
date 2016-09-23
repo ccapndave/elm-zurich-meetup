@@ -149,8 +149,8 @@ renderMatches (blackMatches, whiteMatches) =
   ul
     []
     (
-      ([0..blackMatches] |> List.map (\_ -> li [ class "match black" ] [])) ++
-      ([0..whiteMatches] |> List.map (\_ -> li [ class "match white" ] []))
+      ([0..(blackMatches - 1)] |> List.map (\_ -> li [ class "match black" ] [])) ++
+      ([0..(whiteMatches - 1)] |> List.map (\_ -> li [ class "match white" ] []))
     )
 
 
