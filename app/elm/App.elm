@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import List.Extra exposing (zip)
+import Random exposing (Generator)
 
 
 type alias Colour = Int
@@ -14,14 +15,15 @@ type alias Code =
 
 
 type alias Model =
-  { correctCode : Code
+  { correctCode : Maybe Code
   , currentGuess : Code
   , guesses : List Code
   }
 
 
 type Msg
-  = Guess Code
+  = SetCorrectCode Code
+  | Guess Code
   | ChangeColour Int Code
 
 
@@ -69,20 +71,30 @@ calculateMatches correctCode code =
   (blackCount, whiteCount - blackCount)
 
 
+codeGenerator : Generator Code
+codeGenerator =
+  Random.list 4 (Random.int 0 5)
+    |> Random.map listToCode
+
+
 init : (Model, Cmd Msg)
 init =
-  { correctCode = (0, 0, 0, 0)
+  { correctCode = Nothing
   , currentGuess = (0, 0, 0, 0)
   , guesses = []
-  } ! []
+  } !
+  [ Random.generate SetCorrectCode codeGenerator
+  ]
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    SetCorrectCode code ->
+      { model | correctCode = Just code } ! []
+
     Guess code ->
-      { model | guesses = model.guesses ++ [ code ] }
-      ! []
+      { model | guesses = model.guesses ++ [ code ] } ! []
 
     ChangeColour pos (a, b, c, d) ->
       let
@@ -108,11 +120,16 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-  div
-    []
-    [ renderGuessList model.correctCode model.guesses
-    , renderCurrentGuess model.currentGuess
-    ]
+  case model.correctCode of
+    Just correctCode ->
+      div
+        []
+        [ renderGuessList correctCode model.guesses
+        , renderCurrentGuess model.currentGuess
+        ]
+
+    Nothing ->
+      div [] []
 
 
 renderGuessList : Code -> List Code -> Html Msg
