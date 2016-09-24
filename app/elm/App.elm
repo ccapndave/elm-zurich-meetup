@@ -3,15 +3,16 @@ module App exposing (init, update, view, subscriptions)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import List.Extra exposing (zip)
-import Random exposing (Generator)
+import Random
+import Config exposing (Config)
+import Code exposing (Code, Matches)
 
 
-type alias Colour = Int
-
-
-type alias Code =
-  (Colour, Colour, Colour, Colour)
+config : Config
+config =
+  { numColours = 6
+  , numPins = 4
+  }
 
 
 type alias Model =
@@ -27,63 +28,18 @@ type Msg
   | ChangeColour Int Code
 
 
-codeToList : Code -> List Colour
-codeToList (a, b, c, d) =
-  [ a, b, c, d ]
-
-
-listToCode : List Colour -> Code
-listToCode code =
-  case code of
-    [a, b, c, d] ->
-      (a, b, c, d)
-
-    otherwise ->
-      Debug.crash "This can't happen!"
-
-
-cycleColour : Colour -> Colour
-cycleColour colour =
-  (colour + 1) % 6
-
-
-countOccurences : a -> List a -> Int
-countOccurences x xs =
-  xs
-    |> List.filter (\x' -> x' == x)
-    |> List.length
-
-
-calculateMatches : Code -> Code -> (Int, Int)
-calculateMatches correctCode code =
-  let
-    blackCount =
-      zip (codeToList correctCode) (codeToList code)
-        |> List.filterMap (\(a, b) -> if a == b then Just () else Nothing)
-        |> List.length
-
-    whiteCount =
-      [0..5]
-        |> List.map (\colour -> (countOccurences colour (codeToList correctCode), countOccurences colour (codeToList code)))
-        |> List.map (\(a, b) -> Basics.min a b)
-        |> List.sum
-  in
-  (blackCount, whiteCount - blackCount)
-
-
-codeGenerator : Generator Code
-codeGenerator =
-  Random.list 4 (Random.int 0 5)
-    |> Random.map listToCode
+isCorrect : Config -> Model -> Bool
+isCorrect config model =
+  Maybe.map2 (Code.isCorrect config) model.correctCode (model.guesses |> List.reverse >> List.head) == Just True
 
 
 init : (Model, Cmd Msg)
 init =
   { correctCode = Nothing
-  , currentGuess = (0, 0, 0, 0)
+  , currentGuess = Code.empty config
   , guesses = []
   } !
-  [ Random.generate SetCorrectCode codeGenerator
+  [ Random.generate SetCorrectCode (Code.codeGenerator config)
   ]
 
 
@@ -96,40 +52,37 @@ update msg model =
     Guess code ->
       { model | guesses = model.guesses ++ [ code ] } ! []
 
-    ChangeColour pos (a, b, c, d) ->
+    ChangeColour pos code ->
       let
-        code =
-          case pos of
-            0 ->
-              (cycleColour a, b, c, d)
+        currentGuess =
+          case Code.cycleColourAtPosition config pos code of
+            Just code ->
+              code
 
-            1 ->
-              (a, cycleColour b, c, d)
-
-            2 ->
-              (a, b, cycleColour c, d)
-
-            3 ->
-              (a, b, c, cycleColour d)
-
-            otherwise ->
-              Debug.crash "Illegal position"
+            Nothing ->
+              Debug.crash <| "Illegal colour position " ++ toString pos
       in
-      { model | currentGuess = code } ! []
+      { model | currentGuess = currentGuess } ! []
 
 
 view : Model -> Html Msg
 view model =
-  case model.correctCode of
-    Just correctCode ->
-      div
-        []
-        [ renderGuessList correctCode model.guesses
-        , renderCurrentGuess model.currentGuess
-        ]
+  if isCorrect config model then
+    div
+      []
+      [ text "You got it!"
+      ]
+  else
+    case model.correctCode of
+      Just correctCode ->
+        div
+          []
+          [ renderGuessList correctCode model.guesses
+          , renderCurrentGuess model.currentGuess
+          ]
 
-    Nothing ->
-      div [] []
+      Nothing ->
+        div [] []
 
 
 renderGuessList : Code -> List Code -> Html Msg
@@ -142,7 +95,7 @@ renderGuessList correctCode codes =
           [ class "guess"
           ]
           [ renderCode code
-          , renderMatches (calculateMatches correctCode code)
+          , renderMatches (Code.calculateMatches correctCode code)
           ]
       )
     )
@@ -161,30 +114,37 @@ renderCurrentGuess code =
     ]
 
 
-renderMatches : (Int, Int) -> Html Msg
-renderMatches (blackMatches, whiteMatches) =
+renderMatches : Matches -> Html Msg
+renderMatches { blackCount, whiteCount } =
   ul
     []
     (
-      ([0..(blackMatches - 1)] |> List.map (\_ -> li [ class "match black" ] [])) ++
-      ([0..(whiteMatches - 1)] |> List.map (\_ -> li [ class "match white" ] []))
+      ([0..(blackCount - 1)] |> List.map (\_ -> li [ class "match black" ] [])) ++
+      ([0..(whiteCount - 1)] |> List.map (\_ -> li [ class "match white" ] []))
     )
 
 
 renderCode : Code -> Html Msg
-renderCode ((a, b, c, d) as code) =
+renderCode code =
   ul
     [ class "code"
     ]
-    [ renderColour code a 0
-    , renderColour code b 1
-    , renderColour code c 2
-    , renderColour code d 3
-    ]
+    ([0..3]
+      |> List.map (renderColour code)
+    )
 
 
-renderColour : Code -> Colour -> Int -> Html Msg
-renderColour code colour pos =
+renderColour : Code -> Int -> Html Msg
+renderColour code pos =
+  let
+    colour =
+      case Code.colourAt pos code of
+        Just c ->
+          c
+
+        Nothing ->
+          Debug.crash <| "Illegal colour position " ++ toString pos
+  in
   li
     [ class <| "colour colour-" ++ toString colour
     , onClick <| ChangeColour pos code

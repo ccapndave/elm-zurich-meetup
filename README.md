@@ -1,9 +1,3 @@
-# Elm development environment
+# Mastermind
 
-A gulp based Elm development environment containing compilers and watchers for:
-
- - Elm
- - Typescript + Babel + Browserify + Watchify
- - Less
- - Autoprefixer
- - An Express development server with live reload
+A little game we hacked together at Elm Zurich!
